@@ -1727,6 +1727,12 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot)
   wrenListInsert(vm, list, vm->apiStack[elementSlot], index);
 }
 
+void wrenClearList(WrenVM* vm, int listSlot)
+{
+    validateApiSlot(vm, listSlot);
+    wrenValueBufferClear(vm, &AS_LIST(vm->apiStack[listSlot])->elements);
+}
+
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
                      int slot)
 {

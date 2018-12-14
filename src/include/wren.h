@@ -470,6 +470,9 @@ void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 // an element, use `-1` for the index.
 void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
+// Clears the list stored at [listSlot]
+void wrenClearList(WrenVM* vm, int listSlot);
+
 // Looks up the top level variable with [name] in resolved [module] and stores
 // it in [slot].
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
