@@ -525,4 +525,7 @@ bool wrenGetSlotsEqual(WrenVM* vm, int slot1, int slot2);
 // Checks if the handle is a class.
 bool wrenHandleIsClass(WrenVM* vm, WrenHandle* handle);
 
+// Check if the handle is an instance.
+bool wrenHandleIsInstance(WrenVM* vm, WrenHandle* handle);
+
 #endif

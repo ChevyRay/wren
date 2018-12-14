@@ -1879,3 +1879,8 @@ bool wrenHandleIsClass(WrenVM* vm, WrenHandle* handle)
 {
     return handle != NULL && IS_CLASS(handle->value);
 }
+
+bool wrenHandleIsInstance(WrenVM* vm, WrenHandle* handle)
+{
+    return handle != NULL && IS_INSTANCE(handle->value);
+}
