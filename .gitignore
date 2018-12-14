@@ -39,3 +39,4 @@ ipch/
 *.user
 *.userosscache
 *.sln.docstates
+deps/libuv/build/XCBuildData
