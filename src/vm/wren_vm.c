@@ -1884,3 +1884,10 @@ bool wrenHandleIsInstance(WrenVM* vm, WrenHandle* handle)
 {
     return handle != NULL && IS_INSTANCE(handle->value);
 }
+
+void wrenSlotCopy(WrenVM* vm, int fromSlot, int toSlot)
+{
+    validateApiSlot(vm, fromSlot);
+    validateApiSlot(vm, toSlot);
+    vm->apiStack[toSlot] = vm->apiStack[fromSlot];
+}
