@@ -543,4 +543,7 @@ bool wrenIsHandleForeign(WrenHandle* handle);
 // Gets a pointer to the foreign object referenced by [handle].
 void* wrenGetHandleForeign(WrenHandle* handle);
 
+// Creates a new handle which is a copy of [handle].
+WrenHandle* wrenCopyHandle(WrenVM* vm, WrenHandle* handle);
+
 #endif

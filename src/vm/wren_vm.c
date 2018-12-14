@@ -1916,3 +1916,10 @@ void* wrenGetHandleForeign(WrenHandle* handle)
     ASSERT(IS_FOREIGN(handle->value), "handle is not foreign");
     return AS_FOREIGN(handle->value)->data;
 }
+
+WrenHandle* wrenCopyHandle(WrenVM* vm, WrenHandle* handle)
+{
+    if (!handle)
+        return NULL;
+    return wrenMakeHandle(vm, handle->value);
+}
