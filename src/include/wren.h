@@ -531,4 +531,10 @@ bool wrenHandleIsInstance(WrenVM* vm, WrenHandle* handle);
 // Copies the value stored in [fromSlot] into [toSlot]
 void wrenSlotCopy(WrenVM* vm, int fromSlot, int toSlot);
 
+// Clones the value stored in [fromSlot] into [toSlot]
+void wrenSlotClone(WrenVM* vm, int fromSlot, int toSlot);
+
+// Does a deep clone of the value stored in [fromSlot] into [toSlot]
+void wrenSlotCloneDeep(WrenVM* vm, int fromSlot, int toSlot);
+
 #endif

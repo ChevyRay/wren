@@ -866,4 +866,10 @@ static inline Value wrenNumToValue(double num)
 #endif
 }
 
+// Returns a clone of [value]
+Value wrenClone(WrenVM* vm, Value value);
+
+// Returns a deep clone of [value]
+Value wrenCloneDeep(WrenVM* vm, Value value);
+
 #endif

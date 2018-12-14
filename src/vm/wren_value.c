@@ -1316,3 +1316,107 @@ bool wrenValuesEqual(Value a, Value b)
       return false;
   }
 }
+
+Value wrenClone(WrenVM* vm, Value value)
+{
+    if (IS_STRING(value))
+    {
+        ObjString* s = AS_STRING(value);
+        return wrenNewStringLength(vm, s->value, s->length);
+    }
+    if (IS_INSTANCE(value))
+    {
+        ObjInstance* inst = AS_INSTANCE(value);
+        Value copyVal = wrenNewInstance(vm, inst->obj.classObj);
+        ObjInstance* copy = AS_INSTANCE(copyVal);
+        for (int i = 0; i < inst->obj.classObj->numFields; ++i)
+            copy->fields[i] = inst->fields[i];
+        return copyVal;
+    }
+    if (IS_RANGE(value))
+    {
+        ObjRange* r = AS_RANGE(value);
+        return wrenNewRange(vm, r->from, r->to, r->isInclusive);
+    }
+    if (IS_LIST(value))
+    {
+        ObjList* list = AS_LIST(value);
+        ObjList* copy = wrenNewList(vm, list->elements.count);
+        for (int i = 0; i < list->elements.count; ++i)
+            copy->elements.data[i] = list->elements.data[i];
+        return OBJ_VAL(copy);
+    }
+    if (IS_MAP(value))
+    {
+        ObjMap* map = AS_MAP(value);
+        ObjMap* copy = wrenNewMap(vm);
+        wrenPushRoot(vm, &copy->obj);
+        uint32_t count = 0;
+        for (uint32_t i = 0; i < map->capacity && count < map->count; ++i)
+        {
+            Value key = map->entries[i].key;
+            if (IS_UNDEFINED(key))
+                continue;
+            Value val = map->entries[i].value;
+            wrenMapSet(vm, copy, key, val);
+            ++count;
+        }
+        wrenPopRoot(vm);
+        return OBJ_VAL(copy);
+    }
+    return value;
+}
+
+Value wrenCloneDeep(WrenVM* vm, Value value)
+{
+    if (IS_STRING(value))
+    {
+        ObjString* s = AS_STRING(value);
+        return wrenNewStringLength(vm, s->value, s->length);
+    }
+    if (IS_INSTANCE(value))
+    {
+        ObjInstance* inst = AS_INSTANCE(value);
+        Value copyVal = wrenNewInstance(vm, inst->obj.classObj);
+        ObjInstance* copy = AS_INSTANCE(copyVal);
+        wrenPushRoot(vm, &copy->obj);
+        for (int i = 0; i < inst->obj.classObj->numFields; ++i)
+            copy->fields[i] = wrenCloneDeep(vm, inst->fields[i]);
+        wrenPopRoot(vm);
+        return copyVal;
+    }
+    if (IS_RANGE(value))
+    {
+        ObjRange* r = AS_RANGE(value);
+        return wrenNewRange(vm, r->from, r->to, r->isInclusive);
+    }
+    if (IS_LIST(value))
+    {
+        ObjList* list = AS_LIST(value);
+        ObjList* copy = wrenNewList(vm, list->elements.count);
+        wrenPushRoot(vm, &copy->obj);
+        for (int i = 0; i < list->elements.count; ++i)
+            copy->elements.data[i] = wrenCloneDeep(vm, list->elements.data[i]);
+        wrenPopRoot(vm);
+        return OBJ_VAL(copy);
+    }
+    if (IS_MAP(value))
+    {
+        ObjMap* map = AS_MAP(value);
+        ObjMap* copy = wrenNewMap(vm);
+        wrenPushRoot(vm, &copy->obj);
+        uint32_t count = 0;
+        for (uint32_t i = 0; i < map->capacity && count < map->count; ++i)
+        {
+            Value key = wrenCloneDeep(vm, map->entries[i].key);
+            if (IS_UNDEFINED(key))
+                continue;
+            Value val = wrenCloneDeep(vm, map->entries[i].value);
+            wrenMapSet(vm, copy, key, val);
+            ++count;
+        }
+        wrenPopRoot(vm);
+        return OBJ_VAL(copy);
+    }
+    return value;
+}

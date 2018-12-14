@@ -1891,3 +1891,17 @@ void wrenSlotCopy(WrenVM* vm, int fromSlot, int toSlot)
     validateApiSlot(vm, toSlot);
     vm->apiStack[toSlot] = vm->apiStack[fromSlot];
 }
+
+void wrenSlotClone(WrenVM* vm, int fromSlot, int toSlot)
+{
+    validateApiSlot(vm, fromSlot);
+    validateApiSlot(vm, toSlot);
+    vm->apiStack[toSlot] = wrenClone(vm, vm->apiStack[fromSlot]);
+}
+
+void wrenSlotCloneDeep(WrenVM* vm, int fromSlot, int toSlot)
+{
+    validateApiSlot(vm, fromSlot);
+    validateApiSlot(vm, toSlot);
+    vm->apiStack[toSlot] = wrenCloneDeep(vm, vm->apiStack[fromSlot]);
+}
