@@ -1905,3 +1905,14 @@ void wrenSlotCloneDeep(WrenVM* vm, int fromSlot, int toSlot)
     validateApiSlot(vm, toSlot);
     vm->apiStack[toSlot] = wrenCloneDeep(vm, vm->apiStack[fromSlot]);
 }
+
+bool wrenIsHandleForeign(WrenHandle* handle)
+{
+    return IS_FOREIGN(handle->value);
+}
+
+void* wrenGetHandleForeign(WrenHandle* handle)
+{
+    ASSERT(IS_FOREIGN(handle->value), "handle is not foreign");
+    return AS_FOREIGN(handle->value)->data;
+}

@@ -537,4 +537,10 @@ void wrenSlotClone(WrenVM* vm, int fromSlot, int toSlot);
 // Does a deep clone of the value stored in [fromSlot] into [toSlot]
 void wrenSlotCloneDeep(WrenVM* vm, int fromSlot, int toSlot);
 
+// Checks if [handle] is a foreign object.
+bool wrenIsHandleForeign(WrenHandle* handle);
+
+// Gets a pointer to the foreign object referenced by [handle].
+void* wrenGetHandleForeign(WrenHandle* handle);
+
 #endif
