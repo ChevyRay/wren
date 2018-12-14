@@ -1867,3 +1867,10 @@ void wrenSetUserData(WrenVM* vm, void* userData)
 {
 	vm->config.userData = userData;
 }
+
+bool wrenGetSlotsEqual(WrenVM* vm, int slot1, int slot2)
+{
+    validateApiSlot(vm, slot1);
+    validateApiSlot(vm, slot2);
+    return slot1 == slot2 || wrenValuesEqual(vm->apiStack[slot1], vm->apiStack[slot2]);
+}

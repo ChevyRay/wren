@@ -519,4 +519,7 @@ void* wrenGetUserData(WrenVM* vm);
 // Sets user data associated with the WrenVM.
 void wrenSetUserData(WrenVM* vm, void* userData);
 
+// Checks if the values in the two slots are equal
+bool wrenGetSlotsEqual(WrenVM* vm, int slot1, int slot2);
+
 #endif
