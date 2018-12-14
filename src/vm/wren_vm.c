@@ -1874,3 +1874,8 @@ bool wrenGetSlotsEqual(WrenVM* vm, int slot1, int slot2)
     validateApiSlot(vm, slot2);
     return slot1 == slot2 || wrenValuesEqual(vm->apiStack[slot1], vm->apiStack[slot2]);
 }
+
+bool wrenHandleIsClass(WrenVM* vm, WrenHandle* handle)
+{
+    return handle != NULL && IS_CLASS(handle->value);
+}

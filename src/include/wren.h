@@ -522,4 +522,7 @@ void wrenSetUserData(WrenVM* vm, void* userData);
 // Checks if the values in the two slots are equal
 bool wrenGetSlotsEqual(WrenVM* vm, int slot1, int slot2);
 
+// Checks if the handle is a class.
+bool wrenHandleIsClass(WrenVM* vm, WrenHandle* handle);
+
 #endif
