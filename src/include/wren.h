@@ -263,6 +263,7 @@ typedef enum
   WREN_TYPE_NUM,
   WREN_TYPE_FOREIGN,
   WREN_TYPE_LIST,
+  WREN_TYPE_MAP,
   WREN_TYPE_NULL,
   WREN_TYPE_STRING,
 
@@ -440,6 +441,9 @@ void* wrenSetSlotNewForeign(WrenVM* vm, int slot, int classSlot, size_t size);
 // Stores a new empty list in [slot].
 void wrenSetSlotNewList(WrenVM* vm, int slot);
 
+// Stores a new empty map in [slot]
+void wrenSetSlotNewMap(WrenVM* vm, int slot);
+
 // Stores null in [slot].
 void wrenSetSlotNull(WrenVM* vm, int slot);
 
@@ -472,6 +476,33 @@ void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
 // Clears the list stored at [listSlot]
 void wrenClearList(WrenVM* vm, int listSlot);
+
+// Takes the value stored at [valueSlot] and inserts it into the map stored
+// at [mapSlot] associated with the key at [keySlot].
+void wrenInsertInMap(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
+
+// Clears the map stored at [mapSlot]
+void wrenClearMap(WrenVM* vm, int mapSlot);
+
+// Deletes the value associated with key at [keySlot] from map stored at
+// [mapSlot]
+bool wrenRemoveFromMap(WrenVM* vm, int mapSlot, int keySlot, int removedSlot);
+
+// Return true if the map at [mapSlot] has a key equal to the one stored
+// at [keySlot]
+bool wrenExistsInMap(WrenVM* vm, int mapSlot, int keySlot);
+
+// Read element associated with key stored at [keySlot] from map stored at
+// [mapSlot] and place it in slot [elementSlot]
+bool wrenGetMapElement(WrenVM* vm, int mapSlot, int keySlot, int elementSlot);
+
+// Count the number of elements in the map stored at [slot]
+int wrenGetMapCount(WrenVM* vm, int slot);
+
+// Build a list of keys that exist in the map stored at [mapSlot],
+// and stores this list in [listSlot]. If there is no list in [listSlot],
+// then a new list is created.
+void wrenGetMapKeys(WrenVM* vm, int mapSlot, int listSlot);
 
 // Looks up the top level variable with [name] in resolved [module] and stores
 // it in [slot].

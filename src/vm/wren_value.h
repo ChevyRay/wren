@@ -76,6 +76,7 @@
 #define IS_FOREIGN(value) (wrenIsObjType(value, OBJ_FOREIGN))   // ObjForeign
 #define IS_INSTANCE(value) (wrenIsObjType(value, OBJ_INSTANCE)) // ObjInstance
 #define IS_LIST(value) (wrenIsObjType(value, OBJ_LIST))         // ObjList
+#define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
 
@@ -690,9 +691,9 @@ void wrenMapSet(WrenVM* vm, ObjMap* map, Value key, Value value);
 
 void wrenMapClear(WrenVM* vm, ObjMap* map);
 
-// Removes [key] from [map], if present. Returns the value for the key if found
-// or `NULL_VAL` otherwise.
-Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key);
+// Removes [key] from [map], if present. Assigns the removed value associated
+// with [key] to [removed]. Returns true if it was removed.
+bool wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key, Value* removed);
 
 // Creates a new module.
 ObjModule* wrenNewModule(WrenVM* vm, ObjString* name);

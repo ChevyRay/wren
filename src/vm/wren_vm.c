@@ -1575,6 +1575,7 @@ WrenType wrenGetSlotType(WrenVM* vm, int slot)
   if (IS_NUM(vm->apiStack[slot])) return WREN_TYPE_NUM;
   if (IS_FOREIGN(vm->apiStack[slot])) return WREN_TYPE_FOREIGN;
   if (IS_LIST(vm->apiStack[slot])) return WREN_TYPE_LIST;
+  if (IS_MAP(vm->apiStack[slot])) return WREN_TYPE_MAP;
   if (IS_NULL(vm->apiStack[slot])) return WREN_TYPE_NULL;
   if (IS_STRING(vm->apiStack[slot])) return WREN_TYPE_STRING;
   
@@ -1673,6 +1674,11 @@ void wrenSetSlotNewList(WrenVM* vm, int slot)
   setSlot(vm, slot, OBJ_VAL(wrenNewList(vm, 0)));
 }
 
+void wrenSetSlotNewMap(WrenVM* vm, int slot)
+{
+    setSlot(vm, slot, OBJ_VAL(wrenNewMap(vm)));
+}
+
 void wrenSetSlotNull(WrenVM* vm, int slot)
 {
   setSlot(vm, slot, NULL_VAL);
@@ -1731,6 +1737,97 @@ void wrenClearList(WrenVM* vm, int listSlot)
 {
     validateApiSlot(vm, listSlot);
     wrenValueBufferClear(vm, &AS_LIST(vm->apiStack[listSlot])->elements);
+}
+
+void wrenInsertInMap(WrenVM* vm, int mapSlot, int keySlot, int valueSlot)
+{
+    validateApiSlot(vm, mapSlot);
+    validateApiSlot(vm, keySlot);
+    validateApiSlot(vm, valueSlot);
+    ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must insert into a map.");
+    ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+    wrenMapSet(vm, map, vm->apiStack[keySlot], vm->apiStack[valueSlot]);
+}
+
+void wrenClearMap(WrenVM* vm, int mapSlot)
+{
+    validateApiSlot(vm, mapSlot);
+    wrenMapClear(vm, AS_MAP(vm->apiStack[mapSlot]));
+}
+
+bool wrenRemoveFromMap(WrenVM* vm, int mapSlot, int keySlot, int removedSlot)
+{
+    validateApiSlot(vm, mapSlot);
+    validateApiSlot(vm, keySlot);
+    ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must remove from a map.");
+    ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+    Value removed;
+    bool result = wrenMapRemoveKey(vm, map, vm->apiStack[keySlot], &removed);
+    if (removedSlot >= 0)
+    {
+        validateApiSlot(vm, removedSlot);
+        vm->apiStack[removedSlot] = removed;
+    }
+    return result;
+}
+
+bool wrenExistsInMap(WrenVM* vm, int mapSlot, int keySlot)
+{
+    validateApiSlot(vm, mapSlot);
+    validateApiSlot(vm, keySlot);
+    ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must check in a map.");
+    ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+    Value tmp = wrenMapGet(map, vm->apiStack[keySlot]);
+    return (!IS_UNDEFINED(tmp));
+}
+
+int wrenGetMapCount(WrenVM* vm, int slot)
+{
+    validateApiSlot(vm, slot);
+    ASSERT(IS_MAP(vm->apiStack[slot]), "Must get from a map.");
+    return AS_MAP(vm->apiStack[slot])->count;
+}
+
+bool wrenGetMapElement(WrenVM* vm, int mapSlot, int keySlot, int elementSlot)
+{
+    validateApiSlot(vm, mapSlot);
+    validateApiSlot(vm, keySlot);
+    validateApiSlot(vm, elementSlot);
+    ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Must get from a map.");
+    ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+    Value value = wrenMapGet(map, vm->apiStack[keySlot]);
+    if (IS_UNDEFINED(value))
+    {
+        vm->apiStack[elementSlot] = UNDEFINED_VAL;
+        return false;
+    }
+    vm->apiStack[elementSlot] = value;
+    return true;
+}
+
+void wrenGetMapKeys(WrenVM* vm, int mapSlot, int listSlot)
+{
+    validateApiSlot(vm, mapSlot);
+    validateApiSlot(vm, listSlot);
+    ASSERT(IS_MAP(vm->apiStack[mapSlot]), "Value at [mapSlot] is not a Map.");
+    ObjMap* map = AS_MAP(vm->apiStack[mapSlot]);
+    
+    ObjList* list;
+    if (IS_LIST(vm->apiStack[listSlot]))
+        wrenClearList(vm, listSlot);
+    else
+        setSlot(vm, listSlot, OBJ_VAL(wrenNewList(vm, 0)));
+    list = AS_LIST(vm->apiStack[listSlot]);
+    
+    uint32_t count = 0;
+    for (uint32_t i = 0; i < map->capacity; i++) {
+        MapEntry *entry = &map->entries[i];
+        if (IS_UNDEFINED(entry->key))
+            continue;
+        wrenListInsert(vm, list, entry->key, count++);
+        if (count == map->count)
+            break;
+    }
 }
 
 void wrenGetVariable(WrenVM* vm, const char* module, const char* name,

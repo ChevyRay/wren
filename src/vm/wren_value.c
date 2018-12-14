@@ -601,40 +601,45 @@ void wrenMapClear(WrenVM* vm, ObjMap* map)
   map->count = 0;
 }
 
-Value wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key)
+bool wrenMapRemoveKey(WrenVM* vm, ObjMap* map, Value key, Value* removed)
 {
-  MapEntry* entry;
-  if (!findEntry(map->entries, map->capacity, key, &entry)) return NULL_VAL;
-
-  // Remove the entry from the map. Set this value to true, which marks it as a
-  // deleted slot. When searching for a key, we will stop on empty slots, but
-  // continue past deleted slots.
-  Value value = entry->value;
-  entry->key = UNDEFINED_VAL;
-  entry->value = TRUE_VAL;
-
-  if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
-
-  map->count--;
-
-  if (map->count == 0)
-  {
-    // Removed the last item, so free the array.
-    wrenMapClear(vm, map);
-  }
-  else if (map->capacity > MIN_CAPACITY &&
-           map->count < map->capacity / GROW_FACTOR * MAP_LOAD_PERCENT / 100)
-  {
-    uint32_t capacity = map->capacity / GROW_FACTOR;
-    if (capacity < MIN_CAPACITY) capacity = MIN_CAPACITY;
-
-    // The map is getting empty, so shrink the entry array back down.
-    // TODO: Should we do this less aggressively than we grow?
-    resizeMap(vm, map, capacity);
-  }
-
-  if (IS_OBJ(value)) wrenPopRoot(vm);
-  return value;
+    MapEntry* entry;
+    if (!findEntry(map->entries, map->capacity, key, &entry))
+    {
+        *removed = NULL_VAL;
+        return false;
+    }
+    
+    // Remove the entry from the map. Set this value to true, which marks it as a
+    // deleted slot. When searching for a key, we will stop on empty slots, but
+    // continue past deleted slots.
+    Value value = entry->value;
+    entry->key = UNDEFINED_VAL;
+    entry->value = TRUE_VAL;
+    
+    if (IS_OBJ(value)) wrenPushRoot(vm, AS_OBJ(value));
+    
+    map->count--;
+    
+    if (map->count == 0)
+    {
+        // Removed the last item, so free the array.
+        wrenMapClear(vm, map);
+    }
+    else if (map->capacity > MIN_CAPACITY &&
+             map->count < map->capacity / GROW_FACTOR * MAP_LOAD_PERCENT / 100)
+    {
+        uint32_t capacity = map->capacity / GROW_FACTOR;
+        if (capacity < MIN_CAPACITY) capacity = MIN_CAPACITY;
+        
+        // The map is getting empty, so shrink the entry array back down.
+        // TODO: Should we do this less aggressively than we grow?
+        resizeMap(vm, map, capacity);
+    }
+    
+    if (IS_OBJ(value)) wrenPopRoot(vm);
+    *removed = value;
+    return true;
 }
 
 ObjModule* wrenNewModule(WrenVM* vm, ObjString* name)

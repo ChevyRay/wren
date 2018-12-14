@@ -524,9 +524,11 @@ DEF_PRIMITIVE(map_iterate)
 
 DEF_PRIMITIVE(map_remove)
 {
-  if (!validateKey(vm, args[1])) return false;
-
-  RETURN_VAL(wrenMapRemoveKey(vm, AS_MAP(args[0]), args[1]));
+    if (!validateKey(vm, args[1])) return false;
+    
+    Value removed;
+    wrenMapRemoveKey(vm, AS_MAP(args[0]), args[1], &removed);
+    RETURN_VAL(removed);
 }
 
 DEF_PRIMITIVE(map_keyIteratorValue)
