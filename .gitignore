@@ -43,3 +43,4 @@ ipch/
 
 # macOS XCode build cache
 deps/libuv/build/XCBuildData/
+deps/libuv/build/Intermediates.noindex
