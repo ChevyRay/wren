@@ -1437,6 +1437,19 @@ void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle)
   DEALLOCATE(vm, handle);
 }
 
+void wrenReleaseAllHandles(WrenVM* vm)
+{
+    while (vm->handles != NULL)
+    {
+        WrenHandle* handle = vm->handles;
+        vm->handles = handle->next;
+        handle->prev = NULL;
+        handle->next = NULL;
+        handle->value = NULL_VAL;
+        DEALLOCATE(vm, handle);
+    }
+}
+
 WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
                                   const char* source)
 {
@@ -1604,6 +1617,18 @@ WrenType wrenGetSlotType(WrenVM* vm, int slot)
   if (IS_STRING(vm->apiStack[slot])) return WREN_TYPE_STRING;
   
   return WREN_TYPE_UNKNOWN;
+}
+
+WrenType wrenGetHandleType(WrenHandle* handle)
+{
+    if (IS_BOOL(handle->value)) return WREN_TYPE_BOOL;
+    if (IS_NUM(handle->value)) return WREN_TYPE_NUM;
+    if (IS_FOREIGN(handle->value)) return WREN_TYPE_FOREIGN;
+    if (IS_LIST(handle->value)) return WREN_TYPE_LIST;
+    if (IS_MAP(handle->value)) return WREN_TYPE_MAP;
+    if (IS_NULL(handle->value)) return WREN_TYPE_NULL;
+    if (IS_STRING(handle->value)) return WREN_TYPE_STRING;
+    return WREN_TYPE_UNKNOWN;
 }
 
 bool wrenGetSlotBool(WrenVM* vm, int slot)

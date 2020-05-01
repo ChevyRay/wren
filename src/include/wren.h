@@ -320,6 +320,9 @@ WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);
 // no longer be used.
 void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle);
 
+// Release all handles stored in the vm
+void wrenReleaseAllHandles(WrenVM* vm);
+
 // The following functions are intended to be called from foreign methods or
 // finalizers. The interface Wren provides to a foreign method is like a
 // register machine: you are given a numbered array of slots that values can be
@@ -370,6 +373,9 @@ void wrenEnsureSlots(WrenVM* vm, int numSlots);
 
 // Gets the type of the object in [slot].
 WrenType wrenGetSlotType(WrenVM* vm, int slot);
+
+// Gets the type of the object stored by [handle]
+WrenType wrenGetHandleType(WrenHandle* handle);
 
 // Reads a boolean value from [slot].
 //
