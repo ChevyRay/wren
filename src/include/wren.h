@@ -266,6 +266,8 @@ typedef enum
   WREN_TYPE_MAP,
   WREN_TYPE_NULL,
   WREN_TYPE_STRING,
+  WREN_TYPE_CLASS,
+  WREN_TYPE_INSTANCE,
 
   // The object is of a type that isn't accessible by the C API.
   WREN_TYPE_UNKNOWN
@@ -370,6 +372,9 @@ int wrenGetSlotCount(WrenVM* vm);
 //
 // It is an error to call this from a finalizer.
 void wrenEnsureSlots(WrenVM* vm, int numSlots);
+
+// Gets the name of the [type] as a string
+const char* wrenGetTypeName(WrenType type);
 
 // Gets the type of the object in [slot].
 WrenType wrenGetSlotType(WrenVM* vm, int slot);
@@ -551,5 +556,29 @@ void* wrenGetHandleForeign(WrenHandle* handle);
 
 // Creates a new handle which is a copy of [handle].
 WrenHandle* wrenCopyHandle(WrenVM* vm, WrenHandle* handle);
+
+// Get the class of the value stored in [slot] and store it in [classSlot].
+void wrenGetClassOfSlotValue(WrenVM* vm, int slot, int classSlot);
+
+// Get the name of the class stored in [slot].
+const char* wrenGetClassName(WrenVM* vm, int slot);
+
+// Get the amount of fields of the value stored in [slot].
+int wrenGetFieldCount(WrenVM* vm, int slot);
+
+// Get field [index] of the instance in [objSlot] and store it in [fieldSlot].
+void wrenGetField(WrenVM* vm, int objSlot, int index, int fieldSlot);
+
+// Set field [index] of the instance in [objSlot] to the value of [fieldSlot].
+void wrenSetField(WrenVM* vm, int objSlot, int index, int fieldSlot);
+
+// Get the superclass of [classSlot] and store it in [superClassSlot].
+void wrenGetSuperClass(WrenVM* vm, int classSlot, int superClassSlot);
+
+// Find all method signatures of the class in [classSlot] and populate the list in [listSlot].
+void wrenGetMethodSignatures(WrenVM* vm, int classSlot, int listSlot);
+
+// Returns true if the class in [classSlot] has a method matching [signature].
+bool wrenHasMethod(WrenVM* vm, int classSlot, const char* signature);
 
 #endif

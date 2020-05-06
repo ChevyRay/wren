@@ -1605,6 +1605,24 @@ static void validateApiSlot(WrenVM* vm, int slot)
   ASSERT(slot < wrenGetSlotCount(vm), "Not that many slots.");
 }
 
+// Gets the name of the [type] as a string
+const char* wrenGetTypeName(WrenType type)
+{
+    switch (type)
+    {
+        case WREN_TYPE_BOOL: return "bool";
+        case WREN_TYPE_NUM: return "num";
+        case WREN_TYPE_FOREIGN: return "foreign";
+        case WREN_TYPE_LIST: return "list";
+        case WREN_TYPE_MAP: return "map";
+        case WREN_TYPE_NULL: return "null";
+        case WREN_TYPE_STRING: return "string";
+        case WREN_TYPE_CLASS: return "class";
+        case WREN_TYPE_INSTANCE: return "instance";
+        default: return "unknown";
+    }
+}
+
 // Gets the type of the object in [slot].
 WrenType wrenGetSlotType(WrenVM* vm, int slot)
 {
@@ -1616,6 +1634,8 @@ WrenType wrenGetSlotType(WrenVM* vm, int slot)
   if (IS_MAP(vm->apiStack[slot])) return WREN_TYPE_MAP;
   if (IS_NULL(vm->apiStack[slot])) return WREN_TYPE_NULL;
   if (IS_STRING(vm->apiStack[slot])) return WREN_TYPE_STRING;
+  if (IS_CLASS(vm->apiStack[slot])) return WREN_TYPE_CLASS;
+  if (IS_INSTANCE(vm->apiStack[slot])) return WREN_TYPE_INSTANCE;
 
   return WREN_TYPE_UNKNOWN;
 }
@@ -1629,6 +1649,8 @@ WrenType wrenGetHandleType(WrenHandle* handle)
     if (IS_MAP(handle->value)) return WREN_TYPE_MAP;
     if (IS_NULL(handle->value)) return WREN_TYPE_NULL;
     if (IS_STRING(handle->value)) return WREN_TYPE_STRING;
+    if (IS_CLASS(handle->value)) return WREN_TYPE_CLASS;
+    if (IS_INSTANCE(handle->value)) return WREN_TYPE_INSTANCE;
     return WREN_TYPE_UNKNOWN;
 }
 
@@ -1972,4 +1994,103 @@ WrenHandle* wrenCopyHandle(WrenVM* vm, WrenHandle* handle)
     if (!handle)
         return NULL;
     return wrenMakeHandle(vm, handle->value);
+}
+
+// Return the class stored in [slot], or the class of the value stored there.
+ObjClass* getClassInSlot(WrenVM* vm, int slot)
+{
+    validateApiSlot(vm, slot);
+    if (IS_CLASS(vm->apiStack[slot]))
+        return AS_CLASS(vm->apiStack[slot]);
+    if (IS_OBJ(vm->apiStack[slot]))
+        return AS_OBJ(vm->apiStack[slot])->classObj;
+    if (IS_BOOL(vm->apiStack[slot]))
+        return vm->boolClass;
+    if (IS_NUM(vm->apiStack[slot]))
+        return vm->numClass;
+    if (IS_NULL(vm->apiStack[slot]))
+        return vm->nullClass;
+    ASSERT(false, "The value does not have a class.");
+    return NULL;
+}
+
+void wrenGetClassOfSlotValue(WrenVM* vm, int slot, int classSlot)
+{
+    validateApiSlot(vm, classSlot);
+    ObjClass* c = getClassInSlot(vm, slot);
+    if (IS_CLASS(vm->apiStack[slot]))
+        c = c->obj.classObj;
+    vm->apiStack[classSlot] = OBJ_VAL(c);
+}
+
+const char* wrenGetClassName(WrenVM* vm, int slot)
+{
+    ObjClass* c = getClassInSlot(vm, slot);
+    return c->name->value;
+}
+
+int wrenGetFieldCount(WrenVM* vm, int slot)
+{
+    ObjClass* c = getClassInSlot(vm, slot);
+    return c->numFields;
+}
+
+void wrenGetField(WrenVM* vm, int objSlot, int index, int fieldSlot)
+{
+    validateApiSlot(vm, objSlot);
+    validateApiSlot(vm, fieldSlot);
+    ASSERT(IS_INSTANCE(vm->apiStack[objSlot]), "Value in [objSlot] is not an instance.");
+    ObjInstance* inst = AS_INSTANCE(vm->apiStack[objSlot]);
+    ASSERT(index >= 0 && index < inst->obj.classObj->numFields, "Invalid field [index] for class.");
+    vm->apiStack[fieldSlot] = inst->fields[index];
+}
+
+void wrenSetField(WrenVM* vm, int objSlot, int index, int fieldSlot)
+{
+    validateApiSlot(vm, objSlot);
+    validateApiSlot(vm, fieldSlot);
+    ASSERT(IS_INSTANCE(vm->apiStack[objSlot]), "Value in [objSlot] is not an instance.");
+    ObjInstance* inst = AS_INSTANCE(vm->apiStack[objSlot]);
+    ASSERT(index >= 0 && index < inst->obj.classObj->numFields, "Invalid field [index] for class.");
+    inst->fields[index] = vm->apiStack[fieldSlot];
+}
+
+void wrenGetSuperClass(WrenVM* vm, int classSlot, int superClassSlot)
+{
+    validateApiSlot(vm, classSlot);
+    validateApiSlot(vm, superClassSlot);
+    ASSERT(IS_CLASS(vm->apiStack[classSlot]), "Value in [classSlot] is not a class.");
+    ObjClass* c = AS_CLASS(vm->apiStack[classSlot]);
+    vm->apiStack[superClassSlot] = OBJ_VAL(c->obj.classObj);
+}
+
+void wrenGetMethodSignatures(WrenVM* vm, int classSlot, int listSlot)
+{
+    validateApiSlot(vm, classSlot);
+    validateApiSlot(vm, listSlot);
+    
+    ASSERT(IS_CLASS(vm->apiStack[classSlot]), "Value in [classSlot] is not a class.");
+    ObjClass* c = AS_CLASS(vm->apiStack[classSlot]);
+    
+    ASSERT(IS_LIST(vm->apiStack[listSlot]), "Value in [listSlot] is not a list.");
+    ObjList* list = AS_LIST(vm->apiStack[listSlot]);
+    
+    for (int i = 0; i < c->methods.count; ++i)
+    {
+        if (c->methods.data[i].type != METHOD_NONE)
+        {
+            ObjString* name = vm->methodNames.data[i];
+            wrenListInsert(vm, list, OBJ_VAL(name), list->elements.count);
+        }
+    }
+}
+
+bool wrenHasMethod(WrenVM* vm, int classSlot, const char* signature)
+{
+    validateApiSlot(vm, classSlot);
+    
+    ASSERT(IS_CLASS(vm->apiStack[classSlot]), "Value in [classSlot] is not a class.");
+    ObjClass* c = AS_CLASS(vm->apiStack[classSlot]);
+    int method = wrenSymbolTableFind(&vm->methodNames, signature, strlen(signature));
+    return method >= 0 && method < c->methods.count && c->methods.data[method].type != METHOD_NONE;
 }
